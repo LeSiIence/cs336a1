@@ -48,3 +48,7 @@ line-length = 120
 [tool.ruff.lint]
 extend-select = ["UP"]
 ignore = ["F722"]
+
+[[tool.uv.index]]
+name = "ustc"
+url = "https://pypi.mirrors.ustc.edu.cn/simple/"
