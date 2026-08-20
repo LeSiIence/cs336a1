@@ -1,6 +1,8 @@
 import os
 from typing import BinaryIO
-
+import regex as re
+from collections import Counter, defaultdict
+from typing import Iterable
 
 def find_chunk_boundaries(
     file: BinaryIO,
@@ -48,15 +50,25 @@ def find_chunk_boundaries(
     # Make sure all boundaries are unique, but might be fewer than desired_num_chunks
     return sorted(set(chunk_boundaries))
 
+def _split_on_special_token(text: str, special_tokens: list[str]) -> Iterable[str]:
+    if not special_tokens:
+        yield text
+        return
+    pat = re.compile("|".join(re.escape(token) for token in special_tokens))
 
-## Usage
-with open(..., "rb") as f:
-    num_processes = 4
-    boundaries = find_chunk_boundaries(f, num_processes, b"<|endoftext|>")
+    for piece in pat.split(text):
+        if piece:
+            yield piece
 
-    # The following is a serial implementation, but you can parallelize this
-    # by sending each start/end pair to a set of processes.
-    for start, end in zip(boundaries[:-1], boundaries[1:]):
-        f.seek(start)
-        chunk = f.read(end - start).decode("utf-8", errors="ignore")
-        # Run pre-tokenization on your chunk and store the counts for each pre-token
+def pre_tokenize(chunk : str, special_tokens : list[str]) -> Counter[bytes]:
+    PAT_gpt2 = re.compile(r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+""")
+    
+    counts: Counter[bytes] = Counter()
+
+    for piece in _split_on_special_token(chunk, special_tokens):
+        for match in PAT_gpt2.finditer(piece):
+            pre_token = match.group(0).encode('utf-8')
+            counts[pre_token] += 1
+
+    return counts
+
