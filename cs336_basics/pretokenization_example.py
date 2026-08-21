@@ -4,16 +4,29 @@ import regex as re
 from collections import Counter, defaultdict
 from typing import Iterable
 
+def test_find_chunk_boundaries():
+    path = "data/debug.txt"
+    with open(path, "rb") as f:
+        print(find_chunk_boundaries(f, 4, ['<endoftext1>', '<endoftext2>']))
+        assert find_chunk_boundaries(f, 4, ['<endoftext1>','<endoftext2>']) == [0, 20, 36, 52]
+
+def test_split_on_special_token():
+    path = "data/debug.txt"
+    with open(path, "r") as f:
+        print(list(_split_on_special_token(f.read(), ['<endoftext1>', '<endoftext2>'])))
+        # assert list(_split_on_special_token(f.read(), ['<endoftext1>', '<endoftext2>'])) == ['aaaa', 'bbbb', 'cccc', 'dddd']
+
+
 def find_chunk_boundaries(
     file: BinaryIO,
     desired_num_chunks: int,
-    split_special_token: bytes,
+    special_tokens: list[str],
 ) -> list[int]:
     """
     Chunk the file into parts that can be counted independently.
     May return fewer chunks if the boundaries end up overlapping.
     """
-    assert isinstance(split_special_token, bytes), "Must represent special token as a bytestring"
+    
 
     # Get total file size in bytes
     file.seek(0, os.SEEK_END)
@@ -32,7 +45,8 @@ def find_chunk_boundaries(
     for bi in range(1, len(chunk_boundaries) - 1):
         initial_position = chunk_boundaries[bi]
         file.seek(initial_position)  # Start at boundary guess
-        while True:
+        _bfind = False
+        while _bfind == False:
             mini_chunk = file.read(mini_chunk_size)  # Read a mini chunk
 
             # If EOF, this boundary should be at the end of the file
@@ -41,10 +55,15 @@ def find_chunk_boundaries(
                 break
 
             # Find the special token in the mini chunk
-            found_at = mini_chunk.find(split_special_token)
-            if found_at != -1:
-                chunk_boundaries[bi] = initial_position + found_at
-                break
+            temp = -1
+            for special_token in special_tokens:
+                found_at = mini_chunk.find(special_token.encode("utf-8"))
+                if found_at != -1:                                
+                    if temp == -1 or found_at < temp:
+                        temp = found_at
+                    _bfind = True                
+            if temp != -1:
+                chunk_boundaries[bi] = initial_position + temp
             initial_position += mini_chunk_size
 
     # Make sure all boundaries are unique, but might be fewer than desired_num_chunks
@@ -72,3 +91,5 @@ def pre_tokenize(chunk : str, special_tokens : list[str]) -> Counter[bytes]:
 
     return counts
 
+test_find_chunk_boundaries()
+test_split_on_special_token()
