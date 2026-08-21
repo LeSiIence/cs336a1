@@ -91,5 +91,5 @@ def pre_tokenize(chunk : str, special_tokens : list[str]) -> Counter[bytes]:
 
     return counts
 
-test_find_chunk_boundaries()
-test_split_on_special_token()
+# test_find_chunk_boundaries()
+# test_split_on_special_token()

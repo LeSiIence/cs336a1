@@ -7,11 +7,12 @@ import heapq
 Token = bytes
 Pair = tuple[Token, Token]
 Word = list[Token]
+import os
 
 NUM_PROC = 8
 
 
-def train_bpe(input_path : str,
+def train_bpe(input_path : str | os.PathLike,
 vocab_size : int,
 special_tokens: list[str]) -> tuple[dict[int, bytes],
 list[tuple[bytes, bytes]]]:
@@ -96,4 +97,4 @@ list[tuple[bytes, bytes]]]:
     # TODO return final result
     return (vocab, merges)
 
-train_bpe("data/debug.txt", 266, ['<endoftext1>', '<endoftext2>'])
+# train_bpe("data/debug.txt", 266, ['<endoftext1>', '<endoftext2>'])
