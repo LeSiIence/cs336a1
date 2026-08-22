@@ -22,7 +22,7 @@ print(
     },
 )
 
-with open("model/bpe_model.json", "w", encoding="utf-8") as f:
+with open("model/bpe_model_owt.json", "w", encoding="utf-8") as f:
     json.dump(payload, f, ensure_ascii=False, indent=2)
 
     

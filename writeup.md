@@ -238,10 +238,51 @@
   
   The pre-tokenization phase takes the most time overall, accounting for roughly 45 seconds of the total runtime. Within the BPE merge loop itself, selecting the most frequent pair via `max()` no longer dominates the remaining time (taking 0.0018 seconds).
   
-- 
-
+- Problem (train_bpe_expts_owt): BPE Training on OpenWebText (2 points)
+  (a)
+  Train a byte-level BPE tokenizer on the OpenWebText dataset, using a maximum vocabulary size of 32,000. Serialize the resulting vocabulary and merges to disk for further inspection. What is the longest token in the vocabulary? Does it make sense?
+  Resource requirements: ≤12 hours (no GPUs), ≤100 GB RAM
+  Deliverable: A one-to-two sentence response.
   
+```
+  longest token: {'id': 25822, 'token': 'Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82Ã\x83Ã\x82', 'byte_length': 64} 
+```
 
+  it's strange but actually making sense for there might be some error in the text from the web. The longest token in the OpenWebText vocabulary is a 64-byte sequence consisting of repeated mojibake bytes corresponding to `ÃÂÃÂ...`. This makes sense because OpenWebText contains noisy web-scraped text with encoding artifacts, and BPE repeatedly merges frequent byte sequences regardless of whether they are semantically meaningful.
+
+- (b)
+  Compare and contrast the tokenizer that you get training on TinyStories versus OpenWebText.
+  Deliverable: A one-to-two sentence response.
+
+  ```
+  (base) nanxin@Asus:~/workspace/cs336/assignment1-basics$ /usr/bin/time -v uv run python run/owt.py 2>&1 | tee bpe_output.log
+  Chunk pretokenization: 100%|██████████| 8/8 [10:18<00:00, 77.31s/chunk] 
+  BPE merge: 100%|██████████| 31743/31743 [15:43<00:00, 33.65merge/s]              split time: 1530.3117876052856 s, merge time: 943.4129085540771
+  !!! detailed time: select = 62.855557441711426 
+   merge = 812.7013056278229 
+   recount = 0
+  BPE saved!
+          Command being timed: "uv run python run/owt.py"        User time (seconds): 2373.28
+          System time (seconds): 523.89
+          Percent of CPU this job got: 116%        Elapsed (wall clock) time (h:mm:ss or m:ss): 41:35.76
+          Average shared text size (kbytes): 0        Average unshared data size (kbytes): 0
+          Average stack size (kbytes): 0        Average total size (kbytes): 0
+          Maximum resident set size (kbytes): 24868808
+          Average resident set size (kbytes): 0
+          Major (requiring I/O) page faults: 1853424
+          Minor (reclaiming a frame) page faults: 46130618        Voluntary context switches: 2693522
+          Involuntary context switches: 37451
+          Swaps: 0        File system inputs: 116117640
+          File system outputs: 1632
+          Socket messages sent: 0
+          Socket messages received: 0
+          Signals delivered: 0
+          Page size (bytes): 4096
+          Exit status: 0
+  ```
+  
+  
+  
   
 
 
