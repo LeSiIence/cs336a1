@@ -1,7 +1,7 @@
 import pickle
 import json
 
-with open("bpe_model_owt.pkl", "rb") as f:
+with open("model/bpe_model_owt.pkl", "rb") as f:
     obj = pickle.load(f)
 
 vocab = obj["vocab"]
@@ -22,7 +22,7 @@ print(
     },
 )
 
-with open("bpe_model.json", "w", encoding="utf-8") as f:
+with open("model/bpe_model.json", "w", encoding="utf-8") as f:
     json.dump(payload, f, ensure_ascii=False, indent=2)
 
     

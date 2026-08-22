@@ -77,13 +77,18 @@ list[tuple[bytes, bytes]]]:
         for i in range(len(token) - 1):
             pair_affected_pretokens[(token[i], token[i + 1])].add(token) 
 
-    def make_heap_entry(pair: Pair, freq: int):
-        neg_p0 = bytes(255 - b for b in pair[0])
-        neg_p1 = bytes(255 - b for b in pair[1])
-        return (-freq, neg_p0, neg_p1, pair)
+    def reverse_bytes_key(token: bytes) -> tuple[int, ...]:
+        return tuple(-b for b in token) + (1,)
 
+    def make_heap_entry(pair: Pair, freq: int):
+        return (
+        -freq,
+        reverse_bytes_key(pair[0]),
+        reverse_bytes_key(pair[1]),
+        pair,
+    )
     # initialize heap
-    pair_heap: list[tuple[int, bytes, bytes, Pair]] = [
+    pair_heap: list[tuple[int, tuple[int, ...], tuple[int, ...], Pair]] = [
         make_heap_entry(p, c) for p, c in total_count_pairs.items()
     ]
     heapq.heapify(pair_heap)
@@ -91,15 +96,15 @@ list[tuple[bytes, bytes]]]:
     time_select = 0
     time_merge = 0
     time_recount = 0
-    while len(vocab) < vocab_size and  len(total_count_pairs.items()) > 0:
+    while len(vocab) < vocab_size and  total_count_pairs:
         time_select1 = time.time()
         #most_pair, most_count = max(total_count_pairs.items(), key=lambda x: (x[1], x[0]))
-        # TODO refactor: use heap to select max pair
+        # refactor: use heap to select max pair
         most_pair = None
         while pair_heap:
             neg_freq, _, _, p = heapq.heappop(pair_heap)
             curr_freq = total_count_pairs.get(p, 0)
-            # 只有当堆顶频次与当前真实频次完全一致时，才是有效数据
+            # check if top of the heap is still valid
             if curr_freq > 0 and -neg_freq == curr_freq:
                 most_pair = p
                 break
@@ -120,9 +125,11 @@ list[tuple[bytes, bytes]]]:
         # new_total_count_pairs : Counter[Pair] = Counter()
 
         affected_pretokens = list(pair_affected_pretokens.pop(most_pair, set()))
+
+
+        changed_pairs: set[Pair] = set()
         
         # better update of total_count_tuple using pair->pretoken dict
-        # for token, count in total_count_tuple.items():
         for token in affected_pretokens:
             count = total_count_tuple.pop(token, 0)
             if count == 0:
@@ -132,6 +139,7 @@ list[tuple[bytes, bytes]]]:
             for i in range(len(token) - 1):
                 p = (token[i], token[i + 1])
                 total_count_pairs[p] -= count
+                changed_pairs.add(p)
                 if total_count_pairs[p] == 0:
                     del total_count_pairs[p]
                 elif total_count_pairs[p] < 0:
@@ -156,9 +164,16 @@ list[tuple[bytes, bytes]]]:
             for i in range(len(new_token) - 1):
                 p = (new_token[i], new_token[i + 1])
                 total_count_pairs[p] += count
+                changed_pairs.add(p)
                 pair_affected_pretokens[p].add(new_token)
 
-      
+        # push heap
+        for p in changed_pairs:
+            freq = total_count_pairs.get(p, 0)
+            if freq > 0:
+                heapq.heappush(pair_heap, make_heap_entry(p, freq))
+
+
         time_merge2 = time.time()
         time_merge += time_merge2 - time_merge1
 
