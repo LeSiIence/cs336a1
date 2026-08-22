@@ -77,12 +77,36 @@ list[tuple[bytes, bytes]]]:
         for i in range(len(token) - 1):
             pair_affected_pretokens[(token[i], token[i + 1])].add(token) 
 
+    def make_heap_entry(pair: Pair, freq: int):
+        neg_p0 = bytes(255 - b for b in pair[0])
+        neg_p1 = bytes(255 - b for b in pair[1])
+        return (-freq, neg_p0, neg_p1, pair)
+
+    # initialize heap
+    pair_heap: list[tuple[int, bytes, bytes, Pair]] = [
+        make_heap_entry(p, c) for p, c in total_count_pairs.items()
+    ]
+    heapq.heapify(pair_heap)
+
     time_select = 0
     time_merge = 0
     time_recount = 0
     while len(vocab) < vocab_size and  len(total_count_pairs.items()) > 0:
         time_select1 = time.time()
-        most_pair, most_count = max(total_count_pairs.items(), key=lambda x: (x[1], x[0]))
+        #most_pair, most_count = max(total_count_pairs.items(), key=lambda x: (x[1], x[0]))
+        # TODO refactor: use heap to select max pair
+        most_pair = None
+        while pair_heap:
+            neg_freq, _, _, p = heapq.heappop(pair_heap)
+            curr_freq = total_count_pairs.get(p, 0)
+            # 只有当堆顶频次与当前真实频次完全一致时，才是有效数据
+            if curr_freq > 0 and -neg_freq == curr_freq:
+                most_pair = p
+                break
+
+        if most_pair is None:
+            break
+
         time_select2 = time.time()
         time_select += time_select2 - time_select1
         vocab[next_token_id] = most_pair[0] + most_pair[1]
