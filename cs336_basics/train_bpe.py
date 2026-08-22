@@ -5,17 +5,21 @@ from typing import Iterable
 from collections import Counter, defaultdict
 import heapq
 import time
+from tqdm import tqdm
+
+
 Token = bytes
 Pair = tuple[Token, Token]
 Word = list[Token]
 import os
 
-NUM_PROC = 8
+
 
 
 def train_bpe(input_path : str | os.PathLike,
 vocab_size : int,
-special_tokens: list[str]) -> tuple[dict[int, bytes],
+special_tokens: list[str] = [], 
+num_processes : int = 16) -> tuple[dict[int, bytes],
 list[tuple[bytes, bytes]]]:
 
     # 1. initialize vocab
@@ -33,12 +37,12 @@ list[tuple[bytes, bytes]]]:
     total_counts : Counter[bytes] = Counter()
     # 2. split input into chunks to parallel pretokenization.
     with open(input_path, "rb") as f:
-        num_processes = NUM_PROC
+        
         boundaries = find_chunk_boundaries(f, num_processes, special_tokens)
 
 
         # parallel pretokenize each chunk with multiple processes.
-        with ppe(max_workers=NUM_PROC) as t:
+        with ppe(max_workers=num_processes) as t:
             futures = []
             for start, end in zip(boundaries[:-1], boundaries[1:]):
                 f.seek(start)
@@ -46,12 +50,14 @@ list[tuple[bytes, bytes]]]:
                 future = t.submit(pre_tokenize, chunk, special_tokens)
                 futures.append(future)
 
-            for future in futures:
+            for future in tqdm(futures, desc="Chunk pretokenization", unit="chunk"):
                 total_counts.update(future.result())
     time_pretokenize_end = time.time()
 
 
     time_merge_begin = time.time()
+    merge_total = max(0, vocab_size - len(vocab))
+    merge_progress = tqdm(total=merge_total, desc="BPE merge", unit="merge")
     # 3. merge
     # count on pairs
     total_count_pairs : Counter[Pair] = Counter()
@@ -82,6 +88,7 @@ list[tuple[bytes, bytes]]]:
         vocab[next_token_id] = most_pair[0] + most_pair[1]
         next_token_id += 1
         merges.append(most_pair)
+        merge_progress.update(1)
 
         # according to mast_pair update total_count_tuple
         time_merge1 = time.time()
@@ -142,6 +149,7 @@ list[tuple[bytes, bytes]]]:
         #         i += 1
         # time_recount2 = time.time()
         # time_recount += time_recount2 - time_recount1
+    merge_progress.close()
     time_merge_end = time.time()
 
     print(f"split time: {time_pretokenize_end - time_pretokenize_begin} s, merge time: {time_merge_end - time_merge_begin}")
