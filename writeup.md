@@ -254,32 +254,12 @@
   Compare and contrast the tokenizer that you get training on TinyStories versus OpenWebText.
   Deliverable: A one-to-two sentence response.
 
-  ```
-  (base) nanxin@Asus:~/workspace/cs336/assignment1-basics$ /usr/bin/time -v uv run python run/owt.py 2>&1 | tee bpe_output.log
-  Chunk pretokenization: 100%|██████████| 8/8 [10:18<00:00, 77.31s/chunk] 
-  BPE merge: 100%|██████████| 31743/31743 [15:43<00:00, 33.65merge/s]              split time: 1530.3117876052856 s, merge time: 943.4129085540771
-  !!! detailed time: select = 62.855557441711426 
-   merge = 812.7013056278229 
-   recount = 0
-  BPE saved!
-          Command being timed: "uv run python run/owt.py"        User time (seconds): 2373.28
-          System time (seconds): 523.89
-          Percent of CPU this job got: 116%        Elapsed (wall clock) time (h:mm:ss or m:ss): 41:35.76
-          Average shared text size (kbytes): 0        Average unshared data size (kbytes): 0
-          Average stack size (kbytes): 0        Average total size (kbytes): 0
-          Maximum resident set size (kbytes): 24868808
-          Average resident set size (kbytes): 0
-          Major (requiring I/O) page faults: 1853424
-          Minor (reclaiming a frame) page faults: 46130618        Voluntary context switches: 2693522
-          Involuntary context switches: 37451
-          Swaps: 0        File system inputs: 116117640
-          File system outputs: 1632
-          Socket messages sent: 0
-          Socket messages received: 0
-          Signals delivered: 0
-          Page size (bytes): 4096
-          Exit status: 0
-  ```
+  - longest token: for owt, there are corrupted characters and long hypens
+  - top token: for tiny, there are words like ''happy", "mom", etc.; for owt, there are "president" "Twitter". Apparently those are from different aspect of texts. they both have usual words like "and" and "the"
+  
+  
+  
+  
   
   
   
