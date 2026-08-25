@@ -19,20 +19,14 @@ def sample(pkl_path : str, text_path : str, k : int = 10):
     len_text = 0
     random.seed(2026)
     time0 = time.time()
-    if k > 0:
-        for piece in random.sample(pieces, k=k):
-            if piece == "<|endoftext|>":
-                raise ValueError
-            encoded_piece = t.encode(piece)
-            encoded.extend(encoded_piece)
-            len_text += len(piece.encode("utf-8"))
-    else:
-        for piece in pieces:
-            if piece == "<|endoftext|>":
-                raise ValueError
-            encoded_piece = t.encode(piece)
-            encoded.extend(encoded_piece)
-            len_text += len(piece.encode("utf-8"))
+
+    for piece in random.sample(pieces, k=k) if k > 0 else pieces:
+        if piece == "<|endoftext|>":
+            raise ValueError
+        encoded_piece = t.encode(piece)
+        encoded.extend(encoded_piece)
+        len_text += len(piece.encode("utf-8"))
+    
     time1 = time.time()
 
     throughput = len_text / (time1 - time0)
