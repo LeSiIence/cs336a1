@@ -257,6 +257,25 @@
   - longest token: for owt, there are corrupted characters and long hypens
   - top token: for tiny, there are words like ''happy", "mom", etc.; for owt, there are "president" "Twitter". Apparently those are from different aspect of texts. they both have usual words like "and" and "the"
   
+  ### 2.7
+  
+  (a) 4.244378973484261 owt
+  4.023749368367863 tinystories ;for fixed seed `2026` on valid set
+
+  (b)3.2285916489738145
+  
+  lower
+  
+  (c) 6208914.756519737 bytes / s
+  
+  about 37 hrs, only on single process.
+  
+  (d) because vocab size is less than 65535, uint16 is able to store any tokenid from 0 to 65535 and saves 50% of memory compared with uint32.
+  
+  
+  
+  
+  
   
   
   

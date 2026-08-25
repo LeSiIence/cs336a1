@@ -118,7 +118,7 @@ class Tokenizer:
     @classmethod
     def _from_single_file_pkl(cls, 
         file_path : str, 
-        special_tokens : list[str] = []):
+        special_tokens : list[str] = ["<|endoftext|>"]):
         with open(file_path, "rb") as f:
             obj = pickle.load(f)
         vocab = obj["vocab"]
@@ -166,7 +166,7 @@ class Tokenizer:
 
         return old_token
 
-    def _split_on_special_token(self, text: str, special_tokens: list[str]) -> Iterable[str]:
+    def _split_on_special_token(self, text: str, special_tokens: list[str] = ["<|endoftext|>"]) -> Iterable[str]:
         if not special_tokens:
             yield text
             return
