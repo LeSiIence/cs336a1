@@ -28,9 +28,15 @@ def run_linear(
     Returns:
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
-
-    raise NotImplementedError
-
+    from cs336_basics.linear import Linear
+    linear_layer = Linear(
+        in_features = d_in,
+        out_features= d_out,
+        device=weights.device,
+        dtype=weights.dtype
+    )
+    linear_layer.load_state_dict({"weight": weights})
+    return linear_layer(in_features)
 
 def run_embedding(
     vocab_size: int,
@@ -50,9 +56,15 @@ def run_embedding(
     Returns:
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
-
-    raise NotImplementedError
-
+    from cs336_basics.embedding import Embedding
+    embedding_layer = Embedding(
+        num_embeddings=vocab_size,
+        embedding_dim=d_model,
+        device=weights.device,
+        dtype=weights.dtype
+    )
+    embedding_layer.load_state_dict({"weight": weights})
+    return embedding_layer(token_ids)
 
 def run_swiglu(
     d_model: int,
@@ -83,8 +95,12 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-    raise NotImplementedError
-
+    from cs336_basics.positionwise_feedforward import SwiGLU
+    swiglu_layer = SwiGLU(d_model, d_ff, device=w1_weight.device, dtype=w1_weight.dtype)
+    swiglu_layer.l1.load_state_dict({"weight": w1_weight})
+    swiglu_layer.l2.load_state_dict({"weight": w2_weight})
+    swiglu_layer.l3.load_state_dict({"weight": w3_weight})
+    return swiglu_layer(in_features)
 
 def run_scaled_dot_product_attention(
     Q: Float[Tensor, " ... queries d_k"],
@@ -378,8 +394,15 @@ def run_rmsnorm(
         Float[Tensor,"... d_model"]: Tensor of with the same shape as `in_features` with the output of running
         RMSNorm of the `in_features`.
     """
-    raise NotImplementedError
-
+    from cs336_basics.rmsnorm import RMSNorm
+    RMSNorm_layer = RMSNorm(
+        d_model=d_model,
+        eps=eps,
+        device=weights.device,
+        dtype=weights.dtype
+    )
+    RMSNorm_layer.load_state_dict({"weight": weights})
+    return RMSNorm_layer(in_features)
 
 def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
     """Given a tensor of inputs, return the output of applying SiLU
